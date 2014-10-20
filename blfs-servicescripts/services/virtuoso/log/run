@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -d /var/log/virtuoso ]; then
+  mkdir -p /var/log/virtuoso
+fi
+exec /usr/bin/svlogd -tt /var/log/virtuoso

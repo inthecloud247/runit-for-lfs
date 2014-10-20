@@ -1,0 +1,12 @@
+#!/bin/sh
+exec /usr/sbin/exportfs -au 2>&1 > /dev/null
+exec /bin/umount /proc/fs/nfsd 2>&1 > /dev/null
+if [ "$QUOTAS" = "yes" ]; then
+  killall rpc.rquotad
+fi
+killall rpc.statd
+killall -HUP nfsd
+killall rpc.mountd
+if [ -f /var/run/rpc.statd.pid ]; then
+  rm -f /var/run/rpc.statd.pid
+fi

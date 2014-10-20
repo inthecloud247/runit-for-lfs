@@ -1,0 +1,44 @@
+.TH RC.LOCAL 5 "9 September 2014" "Runit for LFS"
+.SH NAME
+.B /etc/rc.local
+- a user-editable bash script run at boot time
+.SH DESCRIPTION
+.B rc.local
+is a bash script that is located in /etc and run at boot time by stage 2 of Runit. This script can be edited by the user for the purpose of running commands, scripts, applications, and daemons that are not provided by the runit-for-lfs project.
+.PP
+The
+.B rc.local
+script is provided as a convenience to the user and may not be the best way to start programs at boot time. For one thing, programs started by
+.B rc.local
+will not be supervised by Runit. And for another, there would be no way to take advantage of Runit's logging capabilities. Nevertheless, the
+.B rc.local
+script could be useful for troubleshooting or testing purposes without having to create the run, finish, or log scripts that Runit normally uses to start, stop, monitor, and log programs.
+.PP
+Since
+.B rc.local
+is a bash script, acceptable bash syntax must be used for every line in this file to avoid generating an error during booting. An acceptable entry can be as simple as a single word consisting of the name of the executable to be run, or it can be more complex and consist of anything that is acceptable in a bash script including comments, tests, if statements, for-do loops, and so on. For example...
+.PP
+.RS
+# Load Timidity++ as Daemon
+.br
+if [ -x /usr/bin/timidity ]; then
+.br
+     echo "Starting TiMidity++"
+.br
+     /usr/bin/timidity -iAD -Os -B2,8
+.br
+fi
+.RE
+.PP
+When writing complex script commands in
+.B rc.local,
+remember that some traditional environment variables and configuration files used by LFS are ignored by the runit-for-lfs project, or may be defined in different locations, or may even have been removed. For example, the init-functions script of LFS is removed when runit-for-lfs is installed, so don't attempt to call functions in that file. See the runit-for-lfs README file for more information about things that runit-for-lfs does differently than traditional LFS.
+.PP
+The directory /etc/runit/rc.d is provided by runit-for-lfs as a place to put custom scripts, executables, or legacy SysVinit initscripts that may be desired or required but not provided by runit-for-lfs. Those can then be executed by commands in /etc/rc.local.
+.PP
+.SH AUTHOR
+Arthur Radley
+.br
+<MisterArthurRadley@aol.com>
+.SH "REPORTING BUGS"
+Please send bug reports to <MisterArthurRadley@aol.com>

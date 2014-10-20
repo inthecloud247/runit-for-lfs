@@ -1,0 +1,4 @@
+#!/bin/sh
+exec /usr/sbin/krb5kdc
+exec /usr/sbin/kadmind
+exec /usr/sbin/kpropd -S

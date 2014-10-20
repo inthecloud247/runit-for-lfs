@@ -1,0 +1,354 @@
+2014-09-16 James Powell <james4591@hotmail.com>
+* Rewrote all scripts for Runit.
+
+2013-10-23 Igor Živković <contact@igor-zivkovic.from.hr>
+* Add dovecot init script
+
+2013-09-08 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Update location of autostart in autofs script
+
+2013-07-25 Igor Živković <contact@igor-zivkovic.from.hr>
+* Added restore state to alsa bootscript
+
+2013-07-21 Igor Živković <contact@igor-zivkovic.from.hr>
+* Added unbound bootscript
+
+2013-07-10 Igor Živković <contact@igor-zivkovic.from.hr>
+* Added acpid bootscript
+
+2013-02-04 Armin K. <krejzi@email.com>
+* Added network service for wpa_supplicant
+* Minor modifications to dhclient network service
+
+2012-08-26 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Restore winbindd script
+
+2012-08-25 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Restore xinetd script
+
+2012-08-14 Armin K. <krejzi@email.com>
+* Renamed cyrus-sasl bootscript to saslauthd
+* Renamed openldap bootscript to slapd
+* Renamed kerberos bootscript to krb5
+* Renamed dhcp bootscript to dhcpd and made it configurable
+through /etc/sysconfig/dhcpd
+* Updated dhclient network service to be compatible with latest
+instructions for ISC DHCP.
+
+2012-06-02 Armin K. <krejzi@email.com>
+* Added BlueZ bootscript
+
+2012-06-17 DJ Lucas <dj@linuxfromscratch.org>
+* Fix sshd return value when stopping without running.
+
+2012-05-09 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Add atd script.
+* Make service scripts compatible with older versions of
+init-functions.
+
+2012-05-06 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Update exim script to be compatible with LFS 7.0+.
+
+2012-05-02 Ken Moffat <ken@linuxfromscratch.org>
+* Use /usr/libexec in postfix script to match the book.
+
+2012-05-01 Armin K. <krejzi@email.com>
+* Rewrote gdm script to be compatible with LFS 7.0+.
+
+2012-04-27 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Update autofs script to be compatible with LFS
+
+2012-04-20 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Correct start path in swat
+* Update proftpd for LFS 7.0+
+
+2012-04-18 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Add cifs to netfs stop function.
+* Remove obsolete kernel version tests in nfs-server.
+
+2012-04-09 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Update network service scripts for consistency with LFS.
+
+2012-04-07 Armin K. <krejzi@email.com>
+* Added NetworkManager bootscript.
+
+* Fixed avahi script startup order. Thanks to Wayne
+for reporting the issue.
+
+2012-04-06 Armin K. <krejzi@email.com>
+* Rewrote cyrus-sasl script to be compatible with LFS 7.0+.
+This was done earlier, but no changelog entry was added.
+
+* Rewrote openldap script to be compatible with LFS 7.0+.
+
+* Rewrote kerberos script to be compatible with LFS 7.0+.
+
+2012-04-05 Ken Moffat <ken@linuxfromscratch.org>
+* Update postgresql to the new style.
+
+* Fix the nfs-server - from 'Crider' in ticket #3325.
+
+2012-03-10 DJ Lucas <dj@linuxfromscratch.org>
+* Fix dependency information for postfix script.
+
+2012-02-09 Wayne Blaszczyk <wblaszcz@linuxfromscratch.org>
+* Added avahi script and modified the Makefile accordingly
+
+2011-12-12 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Fix Makefile for httpd for consistency
+
+2011-12-05 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated most scripts to be combatible with LFS 7.0.
+See http://wiki.linuxfromscratch.org/blfs/browser/trunk/bootscripts
+for specific changes.
+
+2010-08-25 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Modified the ntp startup script to only run
+nppd -gx
+
+2009-03-02 Randy McMurchy <randy@linuxfromscratch.org>
+* Modified the D-BUS boot script "stop" section so that the PID
+file is removed when the daemon is stopped.
+
+2008-08-12 Thomas Trepl <thomas@linuxfromscratch.org>
+* Fix a mistyped variable name in Samba init script which
+causes the reload action to fail.
+
+2008-03-25 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated the Stunnel init script to reflect that upstream has
+moved the stunnel binary from /usr/sbin to /usr/bin.
+
+2008-03-15 Alexander E. Patrakov <alexander@linuxfromscratch.org>
+* Imported the new pppoe service script from the LiveCD repository.
+
+2008-03-12 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Revert usage of pid files from a few commits ago except for
+samba, which needs to know the correct process to kill. See
+LFS ticket #2160 and add back these changes when that can be
+depended on.
+
+2008-03-06 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Fixed calls in autofs to echo_failure.
+
+2007-12-21 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Removed the reload target from the dhcp script since dhcpd
+does not support reloading with SIGHUP.
+
+2007-10-21 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Changed the gdm, gpm, haldaemon and ntp scripts to reference
+their pid files in /var/run for all operations.
+
+2007-10-21 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Fixed the samba and sshd scripts to reference the pid files in
+/var/run. This ensures that the correct processes are killed and
+queried. Also changed the dbus script to use the pid file in the
+status target, too.
+
+2007-08-22 DJ Lucas <dj@linuxfromscratch.org>
+* Updated the dhcpcd service script to comply with dhcpcd-3.0.19+.
+
+2007-07-09 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Updated the D-Bus bootscript to call dbus-uuidgen on start and
+use the system pid file.
+
+2007-07-08 Randy McMurchy <randy@linuxfromscratch.org>
+* Update the CUPS section of the Makefile to remove the proper
+files (upstream changed the S/K naming)
+
+2007-06-20 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Update lease info path for dhcpcd-3.x.
+
+2007-06-20 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Use proper references for the pid and lease files in the dhcpcd
+service script.
+
+2006-10-11 Dan Nicholson <dnicholson@linuxfromscratch.org>
+* Fixed gpm boot script to accept multiple arguments in the
+variables, particularly GPMOPTS. Thanks to Christoph Felkes
+for supplying the fix.
+
+2006-06-24 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated the openldap and nfs-server scripts to pass appropriate
+signals to the stop functions. This change was due to changes
+in the LFS functions script on 2/06/05!
+
+2006-06-24 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated the HAL script to work with HAL-0.5.7
+
+2006-06-23 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated the GDM script to the 2.14.2 version of GNOME
+
+2006-06-08 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated bind to refer to /srv/named
+
+2006-04-30 Randy McMurchy <randy@linuxfromscratch.org>
+* Added a command to delete a pid file that the NFS server
+leaves behind
+
+2006-04-27 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Changed autofs order number to 52 so it will be run after cleanfs
+
+2006-04-23 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Added qpopper initailization script and updated the Makefile
+
+2006-04-15 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated the ssh shutdown script to wait one second before setting OOM value
+
+2006-04-11 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated the netfs shutdown script to avoid errors with multiple entries
+
+2006-04-11 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated the sshd script to prevent killing ssh in Out Of Memory conditions
+
+2006-02-05 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated the GDM script to the 2.12.2 version of GNOME
+
+2006-01-01 Randy McMurchy <randy@linuxfromscratch.org>
+* Changed the name of the D-BUS pid file that is removed
+
+2005-11-21 Randy McMurchy <randy@linuxfromscratch.org>
+* Removed the --compress parameter from the RSync bootscript
+
+2005-10-17 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated the GDM script to the 2.12 version of GNOME
+
+2005-10-01 Randy McMurchy <randy@linuxfromscratch.org>
+* Added HAL init script and updated Makefile to include a HAL target
+
+2005-09-26 Randy McMurchy <randy@linuxfromscratch.org>
+* Added D-BUS init script and updated Makefile to include a D-BUS
+target
+
+2005-09-10 Igor Zivkovic <igor@linuxfromscratch.org>
+* Updated PPPoE service script to use the new command names.
+
+2005-07-31 DJ Lucas <dj@linuxfromscratch.org>
+* Removed courier bootscript.
+* Removed start and restart sections of alsa bootscript.
+* Added missing echo in mysql script.
+* Reordered bootscripts for samba/cups interaction.
+
+2005-07-08 DJ Lucas <dj@linuxfromscratch.org>
+* Moved all scripts to use new functions provided by
+lfs-bootscripts-3.2.1.
+
+2005-06-26 DJ Lucas <dj@linuxfromscratch.org>
+* Added uninstall targets to Makefile. Patch provided by
+Matthias Berndt.
+
+2005-06-13 Igor Zivkovic <igor@linuxfromscratch.org>
+* Corrected the MySQL script to make it compatible with the new LFS
+boot scripts (Jay D. McHugh).
+
+2005-05-31 Randy McMurchy <randy@linuxfromscratch.org>
+* Removed explicit path from GDM script commands so that the commands
+will work no matter where $GNOME_PREFIX is.
+
+2005-05-30 Randy McMurchy <randy@linuxfromscratch.org>
+* Updated GDM script to GNOME-2.10.
+
+2005-05-09 Igor Zivkovic <igor@linuxfromscratch.org>
+* Added a killproc parameter to mysql (Nathan Coulson).
+
+2005-03-13 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Updated openldap1 and openldap2 to check for running
+daemons before starting.
+
+2005-03-13 Bruce Dubbs <bdubbs@linuxfromscratch.org>
+* Added iptables initialization script.
+
+2005-03-02 Randy McMurchy <randy@linuxfromscratch.org>
+* Added 'status' option to portmap bootscript.
+
+2005-01-02 DJ Lucas <dj@linuxfromscratch.org>
+* Added courier bootscript.
+
+2004-12-27 Randy McMurchy <randy@linuxfromscratch.org>
+* Changed Exim bootscript to start the daemon with -q15m instead
+of -q1m.
+
+2004-11-21 Igor Zivkovic <igor@linuxfromscratch.org>
+* Removed setclock symlinks at install-ntp target and added a
+substitute command in the book.
+
+2004-10-27 Randy McMurchy <randy@linuxfromscratch.org>
+* Added new bootscript for Stunnel.
+
+2004-10-23 Randy McMurchy <randy@linuxfromscratch.org>
+* Modified PostgreSQL script because the pg_ctl script
+is no longer able to run as user root.
+
+2004-10-20 DJ Lucas <dj@linuxfromscratch.org>
+* Added ability to print assigned addresses when using
+dhcpcd service script.
+
+2004-10-13 Igor Zivkovic <igor@linuxfromscratch.org>
+* Added ntpd -gqx to ntp bootscript start case to set
+the initial time (Thomas Trepl)
+* Added setclock stop symlinks to runlevels 0, 1, 2
+and 6 on install-ntp target to write the system time
+back to hardware clock (Jeremy Utley)
+
+2004-10-11 DJ Lucas <dj@linuxfromscratch.org>
+* Fixed multiple errors in nfs-server bootscript
+* Removed lockd from nfs-client bootscript
+* Added svn keywords to remaining bootscripts
+
+2004-10-02 DJ Lucas <dj@linuxfromscratch.org>
+* Changed all scripts to use full path names
+
+2004-09-28 DJ Lucas <dj@linuxfromscratch.org>
+* Replaced nfs-server and nfs-client scripts
+* Adjusted mysql and winbind scripts to use PIDFILE
+* Added svn keywords to remaining bootscripts
+
+2004-08-26 Randy McMurchy <randy@linuxfromscratch.org>
+* Removed usb script (suggested by Alexander Patrakov)
+
+2004-08-06 Randy McMurchy <randy@linuxfromscratch.org>
+* Added openldap (slapd and slurpd startup) scripts
+
+2004-08-05 Randy McMurchy <randy@linuxfromscratch.org>
+* Added cyrus-sasl (Cyrus SASL authdaemon) script
+
+2004-08-03 DJ Lucas <dj@linuxfromscratch.org>
+* Added MODE and DIRMODE variables to set
+permissions of installed scripts and
+directories
+* Corrected script to remove svn directories
+when creating release tarball
+
+2004-07-31 Randy McMurchy <randy@linuxfromscratch.org>
+* Added nas (Network Audio Server) script
+
+2004-07-28 DJ Lucas <dj@linuxfromscratch.org>
+* Made minor fixups to dhcpcd, dhclient, and ipx
+service scripts
+* Added a shell script to create tarball
+
+2004-07-28 Randy McMurchy <randy@linuxfromscratch.org>
+* Changed location of PID file in mysql script
+
+2004-07-21 DJ Lucas <dj@linuxfromscratch.org>
+* Changed vsftpd bootscript to use loadproc
+
+2004-07-19 DJ Lucas <dj@linuxfromscratch.org>
+* Added svn and vsftpd scripts
+
+2004-06-27 DJ Lucas <dj@linuxfromscratch.org>
+* Added sysstat bootscript
+* Fixed missing $EXTDIR targets in Makefile
+
+2004-06-16 DJ Lucas <dj@linuxfromscratch.org>
+* Added GPMOPTS to gpm script
+* wrapped all gpm variables in quotes
+
+2004-05-22 Tushar T <tushar@linuxfromscratch.org>
+* Added winbind script
+
+2004-05-14 Tushar T <tushar@linuxfromscratch.org>
+* Added init.d/kerberos script
+* Added init.d/usb script
+
+2004-05-13 Tushar T <tushar@linuxfromscratch.org>
+* The begining of blfs-bootscripts

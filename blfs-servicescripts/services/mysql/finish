@@ -1,0 +1,4 @@
+#!/bin/sh
+/bin/kill -9 $(/bin/pidof mysqld)
+/bin/kill -9 $(/bin/pidof mysqld_safe)
+exit 0

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+exec /usr/lib/sa/sadc -F -L -
+
+exec /usr/bin/pause

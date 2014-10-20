@@ -1,0 +1,44 @@
+.TH PAUSE 8 "12 September 2014" "Runit for LFS"
+.SH NAME
+.B pause
+- don't exit, efficiently
+.PP
+.SH SYNOPSIS
+.B pause
+.PP
+.SH DESCRIPTION
+.B pause
+waits to be terminated by a signal. It can be used when service supervision is desired but there is no long-running program to supervise.
+.B  pause
+uses minimal system resources.
+.PP
+.SH EXAMPLES
+Setting up a static IP address...
+.TP
+/etc/netsv/eth0/run:
+.br
+
+#!/bin/sh
+.br
+ip link set eth0 up
+.br
+ip addr add 192.0.2.1/24 dev eth0
+.br
+exec pause
+.TP
+/etc/netsv/eth0/finish:
+.br
+
+#!/bin/sh
+.br
+ip addr del 192.0.2.1/24 dev eth0
+.br
+ip link set eth0 down
+.PP
+.SH SEE ALSO
+sleep(1), pause(3)
+.SH AUTHOR
+Christian Neukirchen,
+chneukirchen@gmail.com
+.br
+This man page was edited and reformatted for runit-for-lfs.

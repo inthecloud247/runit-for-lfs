@@ -1,0 +1,6 @@
+#!/bin/sh
+# Simple runlevel(1) lookalike for Runit.
+
+prev=$(readlink /etc/runit/runsvdir/previous || echo N)
+level=$(readlink /etc/runit/runsvdir/current || echo unknown)
+echo ${prev#/etc/runit/runsvdir/} ${level#/etc/runit/runsvdir/}

@@ -1,0 +1,500 @@
+runit-for-lfs             General Usage Notes             September 16, 2014
+============================================================================
+
+Runit is a mature and proven cross-platform init system for Unix/Linux that
+provides for service daemon supervision, clean startup process state for
+services, reliable logging, fast system boot up with parallel daemon
+initialization, and small code size. Runit was originally developed by and is
+still maintained by Gerrit Pape.
+
+This runit-for-lfs project is an effort to tailor Runit specifically for Linux
+From Scratch which has traditionally used SysVinit as its init system. Our
+intention is to provide an alternative to users who are ready to move on from
+SysVinit but want to avoid handing their systems over to Systemd.
+
+
+How Runit Works
+---------------
+Runit works in three stages. Stage 1 runs when the kernel has finished its
+system initialization tasks and hands off to the init system. Stage 1 involves
+all one-time system initializations of a typical LFS system (e.g., mounting
+filesystems, initializing the console, starting udev, setting the system
+clock, etc.). When stage 1 returns, stage 2 is run and starts a supervision
+service for all enabled daemons. Stage 2 monitors the service daemons and will
+restart them if they should crash or stop for some reason. The sv executable
+can be used to query the state of services and manually stop or restart them.
+When stage 2 receives the signal to shutdown, stage 3 is run and handles the
+task of shutting down the services and doing other tasks related to shutting
+down the system.
+                                        kernel
+                                          |
+                                         1|
+     .--- /etc/runit/reboot ---.        init        14
+ ,---|            2            |<--- (runit-init) <---- init 0|6
+ |   '--- /etc/runit/stopit ---'          |
+ |                                 13     |
+ '------------------------------------>  3|
+                                .-----> runit
+                                |         |
+                                |         |
+                       .---<---------<----+-------->---------.
+                       |        |         |                  |
+                      4|        |        6|                10|
+                    runit/1     |      runit/2            runit/3
+                       |        |         |                  |
+                      5|        |        7|                11|
+                  start things  |     runsvdir              sv
+                       |        |         |                  |
+                       |        |        8|                  |
+                       '--->---'|       runsv         /var/service/*
+                                |         |                  |
+                                |         |                12|
+                                |   .../current/*       stop things
+                                |         |                  |
+                                |         |                  |
+                                |    start things            |
+                                |   monitor things           |
+                                |   restart things           |
+                                |         |                  |
+                                |        9|                  |
+                                '----<----'--------<---------'
+
+        1. kernel runs init which is a symlink to runit-init.
+        2. runit-init uses the owner excecute permission of reboot and stopit
+           to "signal" runit whether to reboot or halt at shutdown time.
+        3. runit-init runs runit.
+        4. runit runs stage 1.
+        5. stage 1 runs various boot time startup scripts or commands.
+        6. runit runs stage 2 when stage 1 returns.
+        7. stage 2 runs runsvdir which starts a runsv process for each service
+           in the current service directory.
+        8. runsv monitors each service and restarts them if they stop.
+        9. stage 2 does not return until time to shut down for reboot or halt.
+       10. runit runs stage 3 if told to shut down for reboot or halt, or if
+           stage 2 returns.
+       11. stage 3 runs sv to stop all services.
+       12. stage 3 also runs various shutdown commands or scripts and then
+           returns.
+       13. runit checks the owner execute permission of reboot and stopit to
+           determine whether to reboot or halt.
+       14. runit-init is called as init 0 or init 6 when the system is already
+           running and sets the owner execute permission of stopit and reboot
+           appropriately for runit to halt or reboot the system.
+
+
+General Installation Notes
+--------------------------
+The runit-for-lfs project is meant to replace SysVinit with Runit which can be
+installed instead of SysVinit in a new system or replace it in an existing
+system. The general steps can be summarized this way...
+
+1. Uninstall SysVinit and lfs-bootscripts
+
+   IMPORTANT NOTE: This step does just what it says and removes SysVinit
+   executables in /sbin such as init, halt, shutdown, runlevel, killall5, etc.,
+   and others such as ifup, ifdown, ipv4-static, ipv4-static-route, and rc. It
+   also removes the entire /etc/rc.d directory which includes all SysVinit
+   initscripts and usually the firewall rules file. It is a good idea to create
+   a backup of the system before installing this new init system.
+
+2. Build and install Runit
+3. Build and/or install several custom executables to replace ones removed
+4. Install a minimal collection of service run scripts initially.
+5. Install and enable the remaining service run scripts the system requires.
+
+The included INSTALL file has detailed step-by-step instructions to accomplish
+those installation tasks. At the end of those steps, the system will be
+capable of booting with Runit handling system initialization chores and service
+daemon startups. It then settles into its normal state of service supervision
+until time to shut down.
+
+
+Runlevels
+---------
+The runit-for-lfs project has two runlevels: single for administration and
+multi for normal use. The default runlevel at boot time will always be multi. A
+runlevel will have a corresponding directory in /etc/runit/runsvdir. Thus, the
+two runlevels in our runit-for-lfs project have the following runlevel
+directories:
+
+   /etc/runit/runsvdir/single
+   /etc/runit/runsvdir/multi
+
+The run scripts for services and daemons are stored in /etc/sv. The two
+runlevel directories will be populated with symlinks to services in /etc/sv.
+When a runlevel is chosen as the current runlevel, all of the services and
+daemons symlinked in that runlevel directory will be started and supervised.
+Usually, the single runlevel which is for administrative use has only the
+agetty symlinks, and the multi runlevel which is for normal use has symlinks
+to all of the services that need to be running during normal use of the system.
+
+At installation time, the single and multi runlevel directories will
+contain symlinks only to basic agetty services for tty consoles. To enable
+an additional service that has been installed in the system (e.g., sshd, dbus,
+cups, etc.), change the terminal directory to the blfs-servicescript directory
+in the runit-for-lfs package source tree and run the command as it is in the
+BLFS book for installing the corresponding SysV initscript. For example, to
+enable the fcron daemon after the fcron package has been installed...
+
+   tar xf runit-for-lfs-<version>
+   cd /runit-for-lfs/blfs-servicescripts
+   make install-fcron
+
+The 'make install-fcron' command in that example will install the runit-for-lfs
+run script for fcron, make it executable, and create a symlink for it in the
+multi runlevel directory.
+
+To create an additional runlevel, create a new runlevel directory in
+/etc/runit/runsvdir and then in that new runlevel directory create symlinks to
+the services in /etc/sv that should run in that new runlevel. For example,
+
+   mkdir /etc/runit/runsvdir/desktop
+   ln -sv /etc/sv/dbus /etc/runit/runsvdir/desktop
+
+In that example, a new runlevel named "desktop" was created and a symlink to
+/etc/sv/dbus was created in it which will result in the dbus daemon being
+started and supervised any time the desktop runlevel is the current runlevel.
+Continue creating symlinks in the new runlevel directory as needed.
+
+So how does a runlevel such as single or multi become the current runlevel? A
+symlink named /etc/runit/runsvdir/current is automatcially created pointing to
+the current runlevel directory. It is this /etc/runit/runsvdir/current symlink
+that is actually used by stage 2 to start services. So if
+/etc/runit/runsvdir/current is a symlink to multi, then all the services in the
+multi runlevel will be started and supervised. To change runlevels, use the
+runsvchdir command which changes the symlink /etc/runit/runsvdir/current to
+target the new runlevel specified in the runsvchdir command.
+
+Examples and illustrations:
+
+List enabled services for the "single" runlevel...
+
+   $ ls /etc/runit/runsvdir/single
+
+List enabled services for the "multi" runlevel...
+
+   $ ls /etc/runit/runsvdir/multi
+
+List enabled services for the "current" runlevel (could be single or multi)...
+
+   $ ls /etc/runit/runsvdir/current
+
+List the available runlevels...
+
+   $ ls /etc/runit/runsvdir
+
+Display the status of enabled services...
+
+   # sv status /etc/runit/runsvdir/current/*
+
+Stop a service temporarily...
+ 
+   # sv stop /etc/runit/runsvdir/current/<service>
+
+Disable a service in a runlevel permanently...
+ 
+   # rm -f /etc/runit/runsvdir/<runlevel>
+
+Re-enable a service that had been disabled...
+
+   # ln -s /etc/sv/<service> /etc/runit/runsvdir/<runlevel>
+
+
+Enabling Service Daemons
+------------------------
+The runit-for-lfs project includes a prepared and growing list of scripts to
+start up many common services installed in typical LFS systems. They can be
+found in the blfs-servicescript directory of the runit-for-lfs package source
+tree. To enable a service that was already installed in the system when the
+runit-for-lfs system was installed, merely untar the runit-for-lfs tarball,
+change directories to the blfs-servicescript directory, and run the
+corresponding 'make install-<service>' command as already described above.
+
+When a package that includes a service daemon is installed after converting to
+Runit for the init system, skip the usual step in the book to untar the
+blfs-bootscript tarball and instead untar the runit-for-lfs tarball. Then
+change to the blfs-servicescript directory and and run the corresponding 'make
+install-<service>' command as already described above.
+
+Our goal is to provide run scripts for all services included in the BLFS book.
+However when a package that includes a service daemon is installed and no run
+script directory exists for it in the runit-for-lfs source tree, then it is
+usually a simple matter to create a run script for it in /etc/sv following some
+of the existing run scripts as examples. Often a single command to start the
+daemon is all that is needed. There also is an rc.local script provided by
+runit-for-lfs for running commands at boot time. See the installed rc.local man
+page for important details about using that.
+
+
+Shutting Down and Rebooting
+---------------------------
+When runit-for-lfs is installed, the instructions in the INSTALL file remove
+SysVinit and lfs-bootscripts. Some of the removed components have to do with
+shutting down and rebooting. Runit is perfectly capable of doing those actions
+on its own. However, during the installation of runit-for-lfs, some of those
+uninstalled SysVinit components are replaced by special new versions of them
+for compatibility purposes and for users who like using them.
+
+halt
+
+   From Void Linux, this binary executable provides the functions of SysVinit's
+   halt program. See the halt man page.
+
+shutdown
+
+   From Void Linux, this is a bash script that mimics the function of SysVinit's
+   shutdown program. See the shutdown man page.
+
+poweroff
+
+   This is a symlink to halt to reproduce the action of the same symlink used by
+   SysVinit. See the halt man page.
+
+reboot
+
+   This is a symlink to halt to reproduce the action of the same symlink used by
+   SysVinit. See the halt man page.
+
+
+A Word About Pause
+------------------
+From Void Linux, the pause binary is an executable that is normally called from
+scripts. It functions to stop the execution of the script until a TERM signal
+is received. Some of the services in runit-for-lfs are not daemons in the
+normal sense that they continue to run once they are started, but are instead
+scripts that do a one-time action and exit. Some examples are iptables, alsa,
+and network.
+
+These kinds of service scripts create a problem for runsv which is the
+component of Runit that monitors the services started by stage 2. When runsv
+discovers that a monitored script has exited, it will run the service's finish
+script and restart the run script. That's how service supervision works.
+However, for service scripts like those mentioned above that normally exit,
+runsv would start the script over and over. To prevent this situation for
+service scripts of this type, a call to the pause binary is inserted at the end
+of the script to keep it in a "running" state as far as runsv is concerned
+until a TERM signal is received and then the scripts exits.
+
+
+Things Done Differently Than Linux From Scratch
+-----------------------------------------------
+This runit-for-lfs project handles certain configuration tasks differently than
+a typical LFS system does.
+
+Setting the System and Hardware Clocks...
+
+   A Linux From Scratch system stores time information such as the time system
+   used by the hardware clock and other clock parameters in
+   /etc/sysconfig/clock and /etc/sysconfig/rc.site. This runit-for-lfs project
+   sets the hardware and system clocks using parameters set in /etc/runit.conf.
+   See man runit.conf for more about setting the system and hardware clocks.
+
+Setting the Time Zone...
+
+   LFS configures the time zone at build time by copying the appropriate time
+   zone file from /usr/share/zoneinfo to /etc/localtime. This runit-for-lfs
+   project allows the user to set the time zone in /etc/runit.conf. At boot
+   time, the time zone set in /etc/runit.conf is used to update /etc/localtime
+   and set the kernel time zone. See man runit.conf for more about setting the
+   time zone in /etc/runit.conf.
+
+Console Font...
+
+   LFS provides for setting console fonts, maps, and tables in
+   /etc/sysconfig/rc.site and /etc/sysconfig/console. This runit-for-lfs
+   project uses parameters set in /etc/runit.conf for that purpose. See man
+   runit.conf for more about setting console fonts in /etc/runit.conf.
+
+Loading Additional Kernel Modules...
+
+   LFS allows the user to list modules for the kernel to load in
+   /etc/sysconfig/modules. This runit-for-lfs project uses parameters set in
+   /etc/runit.conf for that purpose. See man runit.conf for more about loading
+   kernel modules.
+
+"Createfiles"...
+
+   LFS stores information about files and directories to be created at boot
+   time in /etc/sysconfig/createfiles. This runit-for-lfs project uses a
+   variable array in /etc/runit.conf for that purpose. See man runit.conf for
+   more about creating files and directories at boot time.
+
+A special note about /etc/sysconfig/rc.site...
+
+   The functions of the LFS file /etc/sysconfig/rc.site mostly are not used by
+   this runit-for-lfs project or are handled in different locations and ways.
+   The /etc/sysconfig/rc.site file still will be sourced for the system
+   parameters LOGLEVEL, SYSKLOGD_PARMS, SKIPTMPCLEAN. Defaults will be used if
+   those are null or not set.
+
+
+Summary of Runit's Important Files and Directories
+--------------------------------------------------
+Executables:
+
+   /sbin/runit-init
+
+   The first process started by the kernel via a symlink named init. See
+   man runit-init.
+
+   /sbin/runit
+
+   The heart of Runit. Started by runit-init. Starts the stage scripts. See
+   man runit. 
+
+   /usr/sbin/sv
+
+   Controls the state of monitored services and reports their status. See
+   man sv.
+
+   /usr/sbin/chpst
+
+   Allows running a program with a changed process state. See man chpst.
+
+   /usr/sbin/utmpset
+
+   Records that a user has logged out. See man utmpset.
+
+   /usr/sbin/runsvchdir
+
+   Changes the current service directory. Used to change runlevels. See man
+   runsvchdir.
+
+   /usr/sbin/runsvdir
+
+   Starts a monitoring process for each subdirectory or symlink to a directory
+   in the current service directory (runlevel). See man runsvdir.
+
+   /usr/sbin/runsv
+
+   Starts and monitors a service. See man runsv.
+
+   /usr/sbin/svlogd
+
+   The logging daemon for Runit. Monitors log data and writes to specified log
+   files. See man svlogd.
+
+
+Additional custom executables:
+
+   /sbin/ifup
+
+   A modified version of the LFS script to bring up network interfaces. It does
+   not rely on init-functions. See man ifup.
+
+   /sbin/ifdown
+
+   A modified version of the LFS script to bring down network interfaces. It
+   does not rely on init-functions. See man ifdown.
+
+   /lib/services/ipv4-static
+
+   A modified version of the LFS script to add a static IP address to network
+   interfaces. It does not rely on init-functions.
+
+   /lib/services/ipv4-static-route
+
+   A modified version of the LFS script to add a route to network interfaces.
+   It does not rely on init-functions.
+
+   /sbin/halt (poweroff,reboot)
+
+   From Void Linux, a custom binary executable to mimic the traditional
+   functions of halt for compatibility purposes. See man halt.
+
+   /sbin/shutdown
+
+   From Void Linux, a custom bash script to mimic the traditional function of
+   shutdown for compatibility purposes. See man shutdown.
+
+   /bin/pause
+
+   From Void Linux, a binary executable for pausing a script until a TERM
+   signal is received. Used to keep a script that normally runs and terminates
+   in a "running" state for the purposes of supervision. Otherwise, runsv would
+   restart the script over and over.
+
+Config files:
+
+   /etc/runit.conf
+
+   The main configuration file for this runit-for-lfs project. It contains
+   variables and parameters for setting the system and hardware clocks,
+   timezone, console keymap and font, loading kernel modules, and creating
+   files that need to exist at boot time. See man runit.conf.
+
+   /etc/rc.local
+
+   A script run at boot time for the purpose of running commands or starting
+   starting services not covered by LFS or this runit-for-lfs project.
+
+Directories:
+
+   /etc/runit
+
+   The main or parent directory for most of Runit's files and directories.
+
+   /etc/runit/runsvdir/single
+
+   A runlevel directory for administrative purposes that contains symlinks
+   only to agetty services for tty consoles.
+
+   /etc/runit/runsvdir/multi
+
+   The default runlevel for this runit-for-lfs project that contains symlinks
+   to agetty services and all other services that should be running at all
+   times.
+
+   /etc/runit/rc.d
+
+   A directory for users to store custom startup scripts.
+
+   /etc/sv
+
+   The directory for all service run, finish, and log run scripts.
+
+Traditional LFS config files still utilized by runit-for-lfs:
+
+   /etc/rc.site
+
+   This runit-for-lfs project sources this file and uses several user-editable
+   variables and parameters from it if they are set there: SKIPTEMPCLEAN for
+   skipping the tmp directory cleanup, LOGLEVEL to change the console message
+   verbosity level, SYSKLOGD_PARMS to add parameters to the syslogd command run
+   in stage 1. This runit-for-lfs project has built in defaults for these if
+   they are null or not set.
+
+   /etc/hostname or /etc/sysconfig/network
+
+   This runit-for-lfs project tries both of these files to attempt to
+   determine the HOSTNAME string.
+
+   /etc/sysconfig/udev_retry
+
+   This runit-for-lfs project sources this file for a list of udev events that
+   should be retried after the filesystems have been mounted. Users should list
+   likely candidates for this here.   
+
+
+Acknowledgments and References
+------------------------------
+Updates to this may be acquired from the LFS-for-Runit project at...
+http://www.linuxquestions.org/questions/linux-from-scratch-13/runit-for-lfs-official-bundle-release-4175511869
+
+...or this SVN repository at...
+https://code.google.com/p/runit-for-lfs
+
+...or from the LinuxFromScratch Hints repository...
+http://linuxfromscratch.org/hints/downloads/files
+
+This project is loosely based on Void-Linux...
+https://github.com/voidlinux/runit-void
+
+...with several reworkings for Linux From Scratch.
+http://www.linuxfromscratch.org
+
+Richard Downing's Runit site was also very helpful to us...
+http://www.langside.f2s.com/betterboot/
+
+The originator of Runit is Gerrit Pape and his website is...
+http://smarden.org/runit

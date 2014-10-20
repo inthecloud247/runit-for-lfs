@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/dbus ] ; then
+   mkdir /var/log/dbus
+fi
+exec /usr/bin/svlogd -tt /var/log/dbus

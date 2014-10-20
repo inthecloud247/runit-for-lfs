@@ -1,0 +1,4 @@
+#!/bin/sh
+virtuoso_db="/var/lib/virtuoso/db"
+exec 2>&1
+exec /usr/bin/virtuoso-t

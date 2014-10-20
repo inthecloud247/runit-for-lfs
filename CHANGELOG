@@ -1,0 +1,57 @@
+Release 1.0rc1 - 20140922 - Release Candidate 1
+
+- Removed several unneeded finish scripts as they only removed PID files in
+  the /run directory which is cleaned on shutdown of the system anyways.
+- Changed out the update-cache pause command for a timed rerun command using
+  sleep instead. The cache will update every hour upon boot, and can be tuned
+  by the admin for longer wait times if necessary.
+- Fixed several daemons path and flags for execution states. This should allow
+  some of the daemons not running properly to execute as intended, and stay in
+  the "up" status rather than down.
+- Completed migration of services to Runit.
+- Added legacy support for haldaemon. The haldaemon run script comes with a
+  special preloaded source tarball specifically for BLFS systems, but does
+  require a special rebuild of D-Bus to support this feature. Instructions
+  can be found in the run file header and the haldaemon-lfs.tar source package.
+- Added new simplified installation format for blfs-servicescripts for
+  Makefile. Commands are more simplified but should work without a problem.
+- Segregated lfs and blfs service files. Redrafted Makefile for the
+  blfs-servicescripts to mimic functions of blfs-bootscripts for system v.
+- Cache Update service. This service is a multi-use service that can be run
+  either as a one shot or continuously in the background. See the cache-update
+  run file for an explaination.
+- Removed sulogin service. Was found to be unneeded.
+- Temporary fix for shutdown. Not sure why sulogin is misbehaving but it is.
+  The new fix should work without it, and call the halt without using single
+  user mode.
+- Uploaded several new services.
+- Fixed ctrlaltdel handler for rebooting.
+
+20140904 - Bug fix release
+
+- Fixed a flag in the Makefile which caused the services in /etc/sv to not
+  allow symlinks. Symlinking should now work as intended.
+- Removed redundant udev_retry from Stage 1 script. Command was succeeded
+  by the runit.conf MODULES section and is not required.
+- Added VirtualBox Service (VBoxService) run service file from VoidLinux.
+- Added Virtuoso Service run and log service files.
+
+20140830 - Bug fix release.
+
+- Reverted log run files to /path/to method due to the fact group and
+  user "log" may not exist in the system.
+
+20140829 - Initial release of Runit-for-LFS.
+
+- New consolidated and centralized init boot scripts.
+- Legacy support through rc.local for sysv scripts and non-Runit
+  covered BLFS services.
+- New runit.conf system configuration file. Replaces functionality of
+  rc.site, createfiles, udev_retry, and other files from LFS-Bootscripts.
+- New run scripts for many services.
+- Modified LSB service boot scripts for BLFS services.
+- Services requiring logs have log services included.
+- Simplified single and multi runlevels for basic usage.
+- Imported and modified shutdown script from VoidLinux.
+- Imported and modified halt binary from VoidLinux to mimic sysvinit.
+- Support for Runit 2.1.1 or later.

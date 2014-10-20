@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+mkdir -p /var/run/httpd||true
+exec httpd -eDEBUG -DNO_DETACH -DFOREGROUND

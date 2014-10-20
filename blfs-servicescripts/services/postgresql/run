@@ -1,0 +1,3 @@
+#!/bin/sh
+exec setuidgid postgres /usr/lib/postgresql/bin/postmaster \
+  -D /var/lib/postgres/data 2>&1

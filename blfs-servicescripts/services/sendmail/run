@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sv check slapd postgresql mysql >/dev/null || exit 0
+
+exec /usr/sbin/sendmail -bs -bd -q5m start

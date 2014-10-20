@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/fcron ] ; then
+   mkdir -p /var/log/fcron
+fi
+exec /usr/bin/svlogd -tt /var/log/fcron

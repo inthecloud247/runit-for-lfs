@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+if [ -x /usr/sbin/soundoff ]; then
+    exec /usr/sbin/soundoff &>/dev/null
+elif [ -x /usr/sbin/alsactl ]; then
+    exec /usr/sbin/alsactl store  &>/dev/null
+fi

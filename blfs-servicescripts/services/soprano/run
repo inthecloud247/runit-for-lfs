@@ -1,0 +1,7 @@
+#!/bin/sh
+[ -r /etc/sysconfig/soprano ] && . /etc/sysconfig/soprano
+HOME=$SOPRANO_STORAGE
+exec /usr/bin/sopranod \
+	--storagedir $SOPRANO_STORAGE \
+	--backend $SOPRANO_BACKEND \
+	$SOPRANO_OPTIONS

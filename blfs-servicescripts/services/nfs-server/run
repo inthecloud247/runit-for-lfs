@@ -1,0 +1,10 @@
+#!/bin/sh
+sv check rpcbind >/dev/null | exit=1
+ . /etc/sysconfig/nfs-server
+exec /usr/sbin/rpc.statd
+exec /usr/sbin/rpc.nfsd -p $PORT $PROCESSES
+if [ "QUOTAS" = "yes" ]; then
+  /usr/sbin/rpc.rquotad
+fi
+exec /usr/sbin/rpc.mountd
+exec /usr/sbin/exportfs -ra 2>&1 > /dev/null

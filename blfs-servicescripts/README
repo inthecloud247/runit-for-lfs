@@ -1,0 +1,14 @@
+blfs-service-scripts:
+
+This package contains the essential service handling scripts that
+are mentioned in the BLFS BOOK. The scripts cannot be installed
+independently but need to be installed in conjunction with a
+compatible lfs-runit script. See the <lfs-bootscripts.version>
+file for compatibility information.
+
+The various install targets are mentioned in the BLFS book. There 
+are variables defined for script permissions {MODE}, configuration 
+file permissions {CONFMODE}, directory permissions {DIRMODE} and 
+destination directory {DESTDIR}.  For more information refer to the 
+BLFS BOOK at http://www.linuxfromscratch.org/blfs/ .
+

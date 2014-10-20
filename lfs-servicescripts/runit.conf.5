@@ -1,0 +1,108 @@
+.TH RUNIT.CONF 5 "9 September 2014" "Runit for LFS"
+.SH NAME
+.B runit.conf
+- a configuration file for setting various parameters
+.SH DESCRIPTION
+.B runit.conf
+is a configuration file used to set parameters and variables for various scripts that Runit uses when starting or stopping the system.
+.SH OPTIONS
+.B HARDWARECLOCK\fP=[\fBUTC\fP|\fBlocaltime\fP]
+.PP
+Runit will use this variable to tell the hwclock program whether the hardware clock is set to Coordinated Universal Time (UTC) or local time. No other method exists for programs to determine what time system the hardware clock is using. So this variable must be set appropriately for the hardware and system clocks to be set to the correct time during booting and shutting down.
+.PP
+The only valid entries for HARDWARECLOCK are "UTC" and "localtime". If HARDWARECLOCK is commented or does not contain a valid entry, Runit will default to "localtime" which may or may not be appropriate.
+.PP
+.B TIMEZONE
+.PP
+Runit uses this variable to set the time zone for the system. When the hardware clock is using UTC, the time zone information is used to apply the appropriate hour offset to Greenwich Mean Time (GMT) for the system to display the correct local time. It also is important for Daylight Savings Time. The hwclock program uses TIMEZONE to set the TZ environment variable and the kernel time zone. The stage 1 script uses TIMEZONE to copy the appropriate time zone data file from /usr/share/zoneinfo to /etc/localtime.
+.PP
+Possible entries for this variable are found in /usr/share/zoneinfo. Use the tzselect utility for help in determining what to enter in
+.B runit.conf
+for TIMEZONE. If TIMEZONE is commented or null, Runit will default to "America/New_York".
+.PP
+.B KEYMAP
+.PP
+This variable contains the name of the keymap for the loadkeys program to load. The setting is important when a non-US keyboard is being used or when a custom keymap file has been created. If KEYMAP is null or not set, then the default KEYMAP (us) will be loaded. See the loadkeys man page for more information about keymaps.
+.PP
+.B FONT
+.PP
+This variable is used to by the setfont program to load a console font. If FONT is null or not set, then a default font will be used. See the setfont man page for more information about console fonts.
+.PP
+.B FONT_MAP
+.PP
+Used only when a FONT variable is specified, this variable is used to by the setfont program to load a console map. If FONT_MAP is null or not set, then Runit does not use this option with setfont. See the setfont man page for more information about console fonts.
+.PP
+.B FONT_UNIMAP
+.PP
+Use only when a FONT variable is specified, and usually not needed even then, this variable is used to by the setfont program to load a Unicode map table when needed. If FONT_UNIMAP is null or not set, then Runit does not use this option with setfont. See the setfont man page for more information about console fonts.
+.PP
+.B MODULES
+.PP
+This is a variable containing modules to be loaded by the kernel. If a kernel module is needed but is not being automatically loaded, try listing it here. Multiple modules separated by a space can be entered.
+.PP
+.B LOGLEVEL
+.PP
+Set this variable to the desired level of console messaging verbosity. Valid entries can be a number from 0 to 7, or the abbreviation of the level name. See the dmesg man page for more about the log levels.
+.PP
+.RS
+Level Name    Level Value    Meaning
+.br
+----------    -----------    -------
+.br
+KERN_EMERG         0         System is unusable
+.br
+KERN_ALERT         1         Action must be taken immediately
+.br
+KERN_CRIT          2         Critical conditions
+.br
+KERN_ERR           3         Error conditions
+.br
+KERN_WARNING       4         Warning conditions
+.br
+KERN_NOTICE        5         Normal but significant condition
+.br
+KERN_INFO          6         Informational
+.br
+KERN_DEBUG         7         Debug-level messages
+.RE
+.PP
+.B SYSLOGD_PARMS
+.PP
+Set this variable to a space delimited list of options for the syslogd command run by stage 1 at boot time. See the sysklogd man page for valid entries.
+.PP
+.B KLOGD_PARMS
+.PP
+Set this variable to a space delimited list of options for the klogd command run by stage 1 at boot time. See the klogd man page for valid entries.
+.PP
+.B SKIPTMPCLEAN
+.PP
+Set this variable to true to skip cleaning the /tmp directory at boot time. Valid entries are "yes", "true", and "1".
+.PP
+.B SUBSYSTEMS
+.PP
+Set this variable to a space delimited list of subsystems that may need to be re-triggered after filesystems have been mounted rw because they write to files. Likely subsystems to list here are rtc (due to /var/lib/hwclock/adjtime) and sound (due to both /var/lib/alsa/asound.state and /usr/sbin/alsactl). This variable is equivalent to and replaces the function of the /etc/sysconfig/udev_retry file in typical LFS systems.
+.PP
+.B CREATEFILES
+.PP
+This is an array of variables that contains shell commands to be run during booting to insure that certain needed files and directories are present at that time. Two common examples are /tmp/.ICE-unix and /tmp/.X11-unix which are required by Xorg Server.
+.PP
+The stage 1 script processess the variable array and runs the shell commands contained in each element of the array. This arrangement replaces the createfiles function in the LFS cleanfs initscript and the /etc/sysconfig/createfiles file.
+.PP
+To add additional elements to the array in
+.B runit.conf,
+type new array elements after the last one listed, appropriately incrementing the index numbers, and followed by the shell command to be executed. Format example...
+.PP
+.RS
+CREATEFILES[1]='mkdir /path/to/directory'
+.br
+CREATEFILES[2]='mkdir /path/to/directory'
+.br
+CREATEFILES[3]='touch /path/to/file'
+.RE
+.PP
+.SH AUTHOR
+Arthur Radley
+.br
+<MisterArthurRadley@aol.com>
+.SH "REPORTING BUGS"
+Please send bug reports to <MisterArthurRadley@aol.com>

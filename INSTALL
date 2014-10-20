@@ -1,0 +1,217 @@
+runit-for-lfs              Installation Notes             September 16, 2014
+============================================================================
+
+Simply stated, runit-for-lfs is a software package intended to automate all
+aspects of configuring Runit after it has been installed in a typical Linux
+From Scratch operating system. runit-for-lfs does not include or install Runit,
+but these instructions do reveal where to get Runit and how to install it
+manually prior to installing runit-for-lfs.
+
+
+Changes Made By Installing runit-for-lfs
+----------------------------------------
+Installing Runit and runit-for-lfs into an LFS system will make significant
+changes to the system. The components of SysVinit will be removed, as well as
+all of the initscripts and other executables installed by lfs-bootscripts.
+
+The SysVinit components that will be removed include init, halt, shutdown,
+runlevel, killall5, fstab-decode, bootlogd, poweroff, telinit, reboot, and man
+pages associated with those.
+
+The lfs-bootscripts components that will be removed include the directories and
+contents of /lib/services, /lib/lsb, /etc/rc.d, /etc/rc.d/init.d, and the
+executables ifup, ifdown, ipv4-static, ipv4-static-route, rc, and possibly
+others that may be present.
+
+The firewall rules script normally residing in /etc/rc.d will be removed.
+
+Where needed by Runit, custom replacements for many of these removed components
+will be installed by Runit and runit-for-lfs.
+
+It is possible to revert back to SysVinit after installing Runit and
+runit-for-lfs. But uninstalling Runit and runit-for-lfs only removes the
+installed components and does not restore what was present before. SysVinit and
+lfs-bootscripts would have to be re-installed after uninstalling Runit and
+runit-for-lfs. However, it is always a better idea to make a thorough and
+tested backup of the system and store it in a safe place before starting.
+
+
+A Word About Chroot
+-------------------
+As explained in the next section, our installation instructions first remove
+the existing SysVinit system. In spite of that, Runit and runit-for-lfs can be
+installed directly into a running system. A script is included to reboot the
+system safely the first time after Runit and runit-for-lfs have been installed.
+Or if preferred, Runit and runit-for-lfs can be installed in a non-running system
+in a chroot environment of a separate host system. In that situation, when the
+installation steps are completed one only has to exit the chroot environment
+and reboot the host system.
+
+Installing Runit and runit-for-lfs in a chroot environment is the user's
+choice. Refer back to the LFS book's sections on mounting the virtual kernel
+filesystems and entering the chroot environment. Then proceed with the next
+section on preliminary steps. At the end of the installation, omit the final
+step about rebooting. Instead, exit the chroot environment, unmount the virtual
+filesystems, and reboot out of the host system into the system with the new
+Runit init system.
+
+
+Preliminary Steps
+-----------------
+This document is intended for an LFS system that does not have SysVinit or
+lfs-bootscripts installed. These preliminary steps explain how to remove
+SysVinit and lfs-bootscripts from the LFS system prior to installing Runit and
+runit-for-lfs. If the LFS system is being built specifically for Runit, then
+one can simply skip the LFS steps related to installing SysVinit and
+lfs-bootscripts, skip these preliminary steps about removing them, and proceed
+with the section about installing Runit.
+
+When the few simple steps in this preliminary section are finished, the system
+will not be bootable until Runit and runit-for-lfs have been installed.
+Therefore, do not proceed beyond this point until you are committed to doing
+this and have sufficient motivation to complete the job.
+
+1. Uninstall lfs-bootscripts. Copy the tarball used to install lfs-bootscripts
+in the system to a suitable working directory and as root...
+
+tar xf lfs-bootscripts-<version>.tar.bz2
+cd lfs-bootscripts-<version>
+make uninstall
+  
+2. Uninstall SysVinit. This has to be done with individual commands because the
+SysVinit Makefile does not accept an uninstall command. As root...
+
+pushd /usr/share/man/man8
+rm -rvf halt.8 init.8 killall5.8 poweroff.8 \
+        reboot.8 runlevel.8 shutdown.8 telinit.8 \
+        fstab-decode.8 bootlogd.8
+popd
+pushd /sbin
+rm -rvf init halt shutdown runlevel killall5 \
+        fstab-decode bootlogd poweroff \
+        telinit reboot
+popd
+  
+
+Install Runit
+-------------
+1. Download a copy of Runit from the Runit homepage...
+
+  http://smarden.org/runit/runit-2.1.2.tar.gz
+
+  Or use git to checkout a copy...
+
+  git clone http://smarden.org/git/runit.git
+
+2. Unpack the Runit tarball in a suitable build directory such as /sources in a
+typical LFS system. The Runit tarball will unpack to a new subdirectory named
+"admin"...
+
+tar xf runit-2.1.2.tar.gz
+cd admin/runit-2.1.2
+
+3. Now build the package...
+
+package/compile
+  
+4. As root, install the software...
+
+cd command
+install -v runit runit-init /sbin
+install -v runsvdir runsv chpst svlogd sv /usr/bin
+install -v runsvchdir utmpset /usr/sbin
+cp -v ../man/* /usr/share/man/man8
+ln -svf /sbin/runit-init /sbin/init
+mkdir -pv /etc/sv
+mkdir -pv /etc/runit/runsvdir/single
+mkdir -pv /etc/runit/runsvdir/multi
+  
+
+Install runit-for-lfs
+---------------------
+1. Unpack the runit-for-lfs tarball in a suitable build directory such as
+/sources in a typical LFS system. The runit-for-lfs tarball will unpack to a
+new directory named "runit-for-lfs"...
+
+tar xf runit-for-lfs-<version>.tar.bz2
+cd runit-for-lfs/lfs-servicescripts
+
+2. Build and install the software. As root...
+
+make && make install
+
+3. Most LFS systems have a udev rule that runs the LFS setclock initscript at
+boot time. That rule needs to be disabled. Your new Runit init system will
+handle the hardware and system clocks by another method. As root...
+
+sed -i '/setclock\ start/ s/^/#/' /etc/udev/rules.d/55-lfs.rules
+
+
+Reboot
+------
+At this point, the SysVinit software and the original LFS bootscripts have been
+removed, and Runit has been installed and configured to be the new init system.
+However, the original init program is still running, but the executables to
+signal init to reboot or shutdown no longer exist. A simple script named
+"post_install_reboot" is included in the runit-for-lfs build directory to
+safely halt the system and perform a low-level reboot. To run this script, log
+out of X Windows to a tty console prompt, and as root...
+
+   NOTE: Skip this section if the installations were done in a chroot
+   environment. Instead, exit chroot, unmount the virtual kernel file
+   systems, and reboot the host system in its usual way.
+
+cd <path/to/runit-for-lfs/lfs-servicescripts>
+post_install_reboot
+
+
+What Now?
+---------
+Hopefully your system successfully reboots like it did before. Console
+messaging content and appearance will be different, but it should boot to a
+normal console login prompt. At this point runit-for-lfs has installed only the
+bare minimum of services that are required to make the system bootable and
+usable. What you do now depends on whether your system is a minimal base LFS
+system or was already a full-fledged working BLFS system with services and
+daemons installed.
+
+After installing runit-for-lfs in a new or base LFS system, nothing else needs
+to be done until or unless you go on to build a BLFS system that includes
+services and daemons. The BLFS book traditionally uses the blfs-bootscripts
+package for installing SysV initscripts for all of the services and daemons
+covered in the BLFS book. Typically, when the BLFS book installs a service
+initscript, you are instructed to untar the blfs-bootscript tarball, change
+directories to the untarred directory, and run a command in this format...
+
+make install-<service_name>
+
+The runit-for-lfs package follows the same command syntax to install the
+runit-for-lfs service and daemon run scripts. The only difference is that the
+runit-for-lfs package contains the service and daemon run scripts in its own
+source tree. So to when you install a BLFS package where the BLFS book tells
+you to install a SysV initscript, the command will be the same as it is in the
+book. But you will untar your runit-for-lfs tarball, change the terminal
+directory to the blfs-servicescript directory in the source tree, and run the
+command there.
+
+After installing runit-for-lfs in a system that was already a working BLFS
+system with services and daemons, you will login and begin installing the
+runit-for-lfs run scripts for all of your installed services and daemons as
+described above. Install a runit-for-lfs run script for each service or daemon
+for which you originally installed a SysV initscript from the blfs-bootscript
+package. This is an easy task that will take only a few minutes to do. For
+example, if you originally installed the D-Bus SysV initscript like this...
+
+make install-dbus
+
+...then the same command will install the runit-for-lfs run scripts for D-Bus
+from the blfs-servicescripts directory of the runit-for-lfs source tree. That
+command will install the service script, create the necessary symlinks, and set
+the required permissions for the service to start and be supervised.
+
+Within seconds of being installed and enabled, your services will be running
+and supervised. See the README file included with runit-for-lfs for more
+information about enabling, disabling, and checking the status of daemons. 
+All that's left to do now is enjoy running and supervising your services and
+daemons with Runit.
+

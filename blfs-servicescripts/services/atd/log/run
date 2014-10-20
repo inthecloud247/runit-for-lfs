@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/atd ] ; then
+   mkdir /var/log/atd
+fi
+exec /usr/bin/svlogd -tt /var/log/atd

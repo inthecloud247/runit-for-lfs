@@ -1,0 +1,264 @@
+#!/bin/sh
+
+# Linux From Scratch Runit Stage 1 Bootscript.
+# Copyright 2014 James Powell, Keith Hedger, and Stoat of LinuxQuestions.
+# Work derived from VoidLinux and ArchIgnite and adapted for LFS.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+# This will setup a sulogin shell just in case any part of the boot process suddenly stops
+# for whatever reason.
+emergency_shell() {
+    echo "Cannot continue due to errors above, starting emergency shell."
+    echo "When ready type exit to continue booting."
+    /bin/sh -l
+}
+
+msg() {
+    # bold
+    printf "\033[1m=> $@\033[m"
+}
+
+msg_ok() {
+    # bold/green
+    printf "\033[1m\033[32m OK\033[m\n"
+}
+
+msg_fail() {
+    # bold/red
+    printf "\033[1m\033[31m FAIL\033[m\n"
+}
+
+msg_warn() {
+    # bold/yellow
+    printf "\033[1m\033[33mWARNING: $@\033[m"
+}
+
+msg "Welcome to Linux From Scratch! \n"
+
+# By default Stage 1 should already come with the system defaults and recommended setups.
+# If you need to load anything optional, you may use the /etc/runit.conf file as a method
+# to load optional system preferences.
+. /etc/runit.conf
+
+# A function from init-functions.
+is_true()
+{
+   [ "$1" = "1" ] || [ "$1" = "yes" ] || [ "$1" = "true" ] ||
+   [ "$1" = "y" ] || [ "$1" = "t" ]
+}
+
+# Let's mount the kernel virtual file systems here. In the past mountvirtfs was used to do this.
+# This section reduplicates this functionality and simplifies the process. This will read fstab
+# properly and mount according to the triggers specificed.
+msg "Mounting pseudo-filesystems...\n"
+mountpoint -q /run || mount /run
+mkdir -p -m0755 /run/{lvm,user,var,lock,shm}
+chmod 1777 /run/shm
+mountpoint -q /proc || mount /proc
+mountpoint -q /sys || mount /sys
+mountpoint -q /dev || mount /dev
+ln -sfn /run/shm /dev/shm
+mkdir -p -m0755 /dev/pts
+mountpoint -q /dev/pts || mount /dev/pts
+
+# Set the console log verbosity level using LOGLEVEL in /etc/runit.conf.
+msg "Setting console log level...\n"
+dmesg -n "${LOGLEVEL:-4}"
+
+# Let's get root mounted at least in read-only for now.
+msg "Remounting rootfs read-only...\n"
+mount -o remount,ro /
+
+# Let's setup the Console modes to display unicode style fonts and graphics.
+msg "Setting up ttys to unicode mode...\n"
+for i in /dev/tty[0-6]; do
+    unicode_start < $i
+done
+if [ -n "$FONT" ]; then
+    msg "Setting up ttys font to '${FONT}'...\n"
+    for i in /dev/tty[0-6]; do
+        setfont ${FONT_MAP:+-m $FONT_MAP} ${FONT_UNIMAP:+-u $FONT_UNIMAP} $FONT -C $i
+    done
+fi
+
+# We'll load a keymap from here as a default.
+msg "Setting up keymap to '${KEYMAP:-us}'...\n"
+loadkeys -q -u ${KEYMAP:-us}
+
+# Set the system clock from the hardware clock. 
+msg "Setting the system clock...\n"
+if [[ ${HARDWARECLOCK} = UTC || ${HARDWARECLOCK} = utc ]] ; then
+    HWC=$(echo $HARDWARECLOCK | tr A-Z a-z)
+    hwclock --hctosys --$HWC --noadjfile
+    echo "Using 'UTC' for the hardware clock..."
+else
+    # If HARDWARECLOCK is anything else, commented, or null, then use 'localtime' as the default...
+    HWC=localtime
+    hwclock --hctosys --$HWC --noadjfile
+    echo "Using 'localtime' for the hardware clock..."
+fi
+
+# Let's get udev started. 
+msg "Starting udev and waiting for devices to settle...\n"
+{ /sbin/udevd --daemon;
+    /sbin/udevadm trigger --action=add --type=subsystems;
+    /sbin/udevadm trigger --action=add --type=devices;
+    /sbin/udevadm settle; } || emergency_shell
+
+# Now we'll get the loopback device started.
+msg "Setting up loopback interface...\n"
+ip link set up dev lo
+
+# We'll load the system hostname, if it exists.
+[ -r /etc/sysconfig/network ] && . /etc/sysconfig/network
+[ -r /etc/hostname ] && HOSTNAME=$(cat /etc/hostname)
+msg "Setting up hostname to '${HOSTNAME}'...\n"
+hostname ${HOSTNAME}
+
+# If we have any RAID devices, we'll now load them.
+if [ -x /usr/sbin/dmraid ]; then
+    msg "Activating dmraid devices...\n"
+    dmraid -i -ay
+fi
+
+# If we have any BtrFS partitions, we'll load them here. By default BtrFS is not utilized by
+# Linux From Scratch and is considered highly unstable as a file system. This section is only
+# here for compatibility reasons, and will require the btrsfs utilities packages to be installed.
+if [ -x /usr/bin/btrfs ]; then
+    msg "Activating btrfs devices...\n"
+    btrfs device scan
+fi
+
+# Now we'll load any Logical Volumes.
+if [ -x /usr/sbin/vgchange ]; then
+    msg "Activating LVM devices...\n"
+    vgchange --sysinit -a y
+fi
+
+# Now we'll load any encrypted devices.
+if [ -e /etc/crypttab ]; then
+    msg "Activating encrypted devices...\n"
+    awk '/^#/ || /^$/ { next }
+      NF>2 { print "unsupported crypttab: " $0 >"/dev/stderr"; next }
+      { system("cryptsetup luksOpen " $2 " " $1) }' /etc/crypttab
+      
+    if [ -x /sbin/vgchange ]; then
+        msg "Activating LVM devices for dm-crypt...\n"
+        vgchange --sysinit -a y || emergency_shell
+    fi
+fi
+
+# Let's check the file systems for any errors from a previous shutdown or reboot.
+msg "Checking filesystems:\n"
+fsck -A -T -a -t noopts=_netdev
+rval=$?
+if [ $rval -gt 1 ]; then
+    emergency_shell
+fi
+
+# Now we'll mount root in full read-write mode.
+msg "Mounting rootfs read-write...\n"
+mount -o remount,rw /
+
+# Start the system and kernel log daemons using command arguments provided by
+# /etc/runit.conf. Otherwise use no command arguments or our default if one 
+# is provided.
+msg "Starting system and kernel log daemons...\n"
+syslogd ${SYSLOGD_PARMS:-'-m 0'}
+klogd ${KLOGD_PARMS}
+
+# Any non-networked file systems will now be mounted.
+msg "Mounting all non-network filesystems...\n"
+mount -a -t "nosysfs,nonfs,nonfs4,nosmbfs,nocifs" -O no_netdev
+
+# Clean /tmp. Skip this if SKIPTMPCLEAN in /etc/runit.conf is true.
+msg "Cleaning up /tmp...\n"
+if ! is_true "${SKIPTMPCLEAN}" ; then
+    cd /tmp
+    find . -xdev -mindepth 1 ! -name lost+found -delete
+fi
+
+# Create files and directories specified in an array in /etc/runit.conf.
+msg "Creating files and directories specified in /etc/runit.conf...\n"
+for i in "${CREATEFILES[@]}" ; do
+    eval "$i"
+done
+
+# Copy udev rules generated before / was mounted rw.
+msg "Copying udev rules to /etc/udev/rules.d...\n"
+for file in /run/udev/tmp-rules--* ; do
+    dest=${file##*tmp-rules--}
+    [ "$dest" = '*' ] && break
+    cat $file >> /etc/udev/rules.d/$dest
+    rm -f $file
+done
+
+# If we have CGroups, this will load them.
+mountpoint -q /sys/fs/cgroup || mount -t tmpfs cgroup /sys/fs/cgroup -o mode=0755
+awk '$4==1 { system("mountpoint -q /sys/fs/cgroup/" $1 " || mount -t cgroup -o " $1 ",x-mount.mkdir cgroup /sys/fs/cgroup/" $1) }' /proc/cgroups
+
+# Turn on the swap partition.
+msg "Initializing swap...\n"
+swapon -a
+
+# Set the time zone and update the system clock.
+msg "Setting timezone to '${TIMEZONE:-America/New_York}'...\n"
+cp /usr/share/zoneinfo/${TIMEZONE:-America/New_York} /etc/localtime
+TZ=${TIMEZONE:-America/New_York} hwclock --systz --$HWC --noadjfile
+
+# This will create an entropy file.
+msg "Initializing random seed...\n"
+cp /var/lib/random-seed /dev/urandom >/dev/null 2>&1 || true
+( umask 077; dd if=/dev/urandom of=/var/lib/random-seed count=1 bs=512 >/dev/null 2>&1 )
+
+# This will remove any file-system check watermarks and other data.
+install -m0664 -o root -g utmp /dev/null /run/utmp
+rm -f /etc/nologin /forcefsck /forcequotacheck /fastboot
+
+# This will load any extra kernel modules via the runit.conf file. Otherwise udev will load
+# everything.
+if [ -n "$MODULES" ]; then
+    msg "Loading kernel modules: ${MODULES} ...\n"
+    modprobe -ab ${MODULES}
+fi
+
+# Re-trigger subsystems listed in /etc/runit.conf
+msg "Processing udev for any remaining subsystems...\n"
+if [ -n "${SUBSYSTEM}" ]; then
+   for i in ${SUBSYSTEM} ; do
+      udevadm trigger --subsystem-match=${i} --action=add
+      udevadm settle
+   done
+fi
+
+# Let's set the kernel runtime parameters if any exist.
+if [ -f "/etc/sysctl.conf" ]; then
+    msg "Setting kernel runtime parameters...\n"
+    sysctl -q -p
+fi
+
+# Start all network interfaces up.
+export IN_BOOT=1
+msg "Starting networking interfaces...\n"
+for file in /etc/sysconfig/ifconfig.*
+  do
+    interface=${file##*/ifconfig.}
+      # Skip if $file is * (because nothing was found)
+      if [ "${interface}" = "*" ]
+        then
+          continue
+        fi
+    /sbin/ifup ${interface}
+  done
+unset IN_BOOT
+
+# Log the system boot.
+dmesg >/var/log/dmesg.log
+
+# Get stopit and reboot read for usage.
+install -m0 /dev/null /etc/runit/reboot
+install -m0 /dev/null /etc/runit/stopit
+
+msg "Initialization complete, running stage 2... \n"
+sleep 3

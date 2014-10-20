@@ -1,0 +1,51 @@
+.TH HALT 8 "12 September 2014" "Runit for LFS"
+.SH NAME
+.B halt, reboot, poweroff
+- stop the system
+.SH SYNOPSIS
+.B halt \fP[\fB-n\fP][\fB-f\fP]
+.br
+.B reboot \fP[\fB-n\fP][\fB-f\fP]
+.br
+.B poweroff \fP[\fB-n\fP][\fB-f\fP]
+.PP
+.SH DESCRIPTION
+.B halt, reboot,
+and
+.B poweroff
+tell init to bring down, reboot, or power off the system. Without
+.B -f,
+they are shortcuts for
+.B init 0 / init 6.
+.TP
+.B -n
+Don't sync before reboot or halt. Note that the kernel and storage drivers may still sync.
+.TP
+.B -f
+Force halt or reboot, don't call init(8). This is dangerous!
+.PP
+.SH UNSUPPORTED OPTIONS
+This version of
+.B halt
+is based on runit(8). The following features are not supported and silently ignored:
+.TP
+.B -w
+only write the wtmp record
+.TP
+.B -d
+don't write the wtmp record
+.TP
+.B -h
+put hard drives in standby mode
+.TP
+.B -i
+shut down network interfaces
+.PP
+.SH SEE ALSO
+shutdown(8), init(8)
+.PP
+.SH AUTHOR
+Christian Neukirchen,
+chneukirchen@gmail.com
+.br
+This man page was edited and reformatted for runit-for-lfs.

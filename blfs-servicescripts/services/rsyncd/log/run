@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/rsyncd ] ; then
+   mkdir -p /var/log/rsyncd
+fi
+exec /usr/bin/svlogd -tt /var/log/rsyncd

@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -d /var/log/sshd ]; then
+    mkdir -p /var/log/sshd
+fi
+exec /usr/bin/svlogd -tt /var/log/sshd

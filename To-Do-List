@@ -1,0 +1,48 @@
+[ ] - Create/Import run service files for the following services:
+          [ ] - iptables-ipv6
+
+Flagged for deletion:
+
+None.
+
+Other things to consider:
+
+[ ] - Import "btrfs scan device --all-devices" into stage 1 for btrfs volumes.
+
+Creating run service files for Community Driven Beyond Linux From Scratch (CBLFS) for
+the following services:
+
+[ ] - clamav
+[ ] - timidity++
+[ ] - SLiM Desktop Manager
+[ ] - Jabberd2
+[ ] - rsnapshot
+[ ] - squid
+[ ] - Courier-Authlib
+[ ] - Courier-IMAP
+[ ] - tftp-hpa
+[ ] - ifplugd
+[ ] - netplugd
+[x] - haldaemon
+[ ] - maui
+[ ] - momclient
+[ ] - mpd
+[ ] - lisa
+[ ] - gdm
+[ ] - cyrus-sasl
+[ ] - cluster
+[ ] - fam
+[ ] - gmetad
+[ ] - LCDd
+[ ] - lcdproc
+[ ] - nas
+[ ] - pbsserver
+[ ] - portmap
+[ ] - syslog-ng
+[ ] - rsyslog
+
+These services will be added to the project on a case-by-case basis ONLY. If you need a
+script for these services, please file in the bug reports section that you need a script
+for a service listed here, and we will work on getting a service run file drafted. If
+you have a working script, and would like it published, you can submit it as well, and
+you will be given credit for it.

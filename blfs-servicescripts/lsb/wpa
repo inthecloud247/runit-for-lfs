@@ -1,0 +1,89 @@
+#!/bin/bash
+# Begin services/wpa
+
+# Origianlly based upon lfs-bootscripts-1.12 $NETWORK_DEVICES/if{down,up}
+# Written by Armin K. <krejzi at email dot com>
+
+# Call with: IFCONFIG=<filename> /lib/services/wpa <IFACE> <up | down>
+
+#$LastChangedBy: krejzi $
+#$Date: 2013-03-24 15:39:14 +0000 (Sun, 24 Mar 2013) $
+
+#. /lib/lsb/init-functions
+. $IFCONFIG
+
+CFGFILE=/etc/sysconfig/wpa_supplicant-${IFCONFIG##*.}.conf
+PIDFILE=/run/wpa_supplicant/$1.pid
+CONTROL_IFACE=/run/wpa_supplicant/$1
+
+case "$2" in
+   up)
+
+      if [ -e ${PIDFILE} ]; then
+         ps $(cat ${PIDFILE}) | grep wpa_supplicant >/dev/null
+         if [ "$?" = "0" ]; then
+            echo "wpa_supplicant already running on $1."
+            exit 0
+         else
+            rm ${PIDFILE}
+         fi
+      fi
+
+      if [ ! -e ${CFGFILE} ]; then
+        echo "wpa_supplicant configuration file ${CFGFILE} not present."
+        echo "wpa_supplicant cannot be started."
+        exit 1
+      fi
+
+      echo "Starting wpa_supplicant on the $1 interface..."
+
+      mkdir -p /run/wpa_supplicant
+
+      /sbin/wpa_supplicant -q -B -Dnl80211,wext -P${PIDFILE} -C/run/wpa_supplicant -c${CFGFILE} -i$1 ${WPA_ARGS}
+
+      if [ "$?" != "0" ]; then
+        echo "wpa_supplicant failed to start."
+        exit 1
+      fi
+
+      echo "wpa_supplicant successfully started."
+
+      if [ -n "${WPA_SERVICE}" ]; then
+         if [ ! -e /lib/services/${WPA_SERVICE} -a ! -x /lib/services/${WPA_SERVICE} ]; then
+            echo "Cannot start ${WPA_SERVICE} on $1"
+            #log_failure_msg2
+            exit 1
+         fi
+
+         IFCONFIG=${IFCONFIG} /lib/services/${WPA_SERVICE} $1 up
+      fi
+   ;;
+
+   down)
+      if [ -n "${WPA_SERVICE}" ]; then
+         if [ ! -e /lib/services/${WPA_SERVICE} -a ! -x /lib/services/${WPA_SERVICE} ]; then
+            echo "Cannot stop ${WPA_SERVICE} on $1"
+         else
+            IFCONFIG=${IFCONFIG} /lib/services/${WPA_SERVICE} $1 down
+         fi
+      fi
+
+      echo "Stopping wpa_supplicant on the $1 interface..."
+
+      if [ -e ${PIDFILE} ]; then
+         kill -9 $(cat ${PIDFILE})
+         rm -f ${PIDFILE} ${CONTROL_IFACE}
+         #evaluate_retval
+      else
+         echo "wpa_supplicant already stopped on $1"
+         exit 0
+      fi
+   ;;
+
+   *)
+      echo "Usage: $0 [interface] {up|down}"
+      exit 1
+   ;;
+esac
+
+# End services/wpa

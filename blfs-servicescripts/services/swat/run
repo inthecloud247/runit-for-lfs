@@ -1,0 +1,9 @@
+#!/bin/sh
+
+config=/etc/stunnel/swat.conf
+
+if [ ! -r /etc/stunnel/swat.conf ]; then
+   exit 1
+fi
+
+exec /usr/bin/stunnel $config

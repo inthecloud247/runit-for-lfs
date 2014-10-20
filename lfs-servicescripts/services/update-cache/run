@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# This service will update the cache of the machine in one of two ways, either
+# continuously, or upon startup of the daemon. It is recommended that you use
+# the default setup to run this daemon.
+if [ -x /sbin/ldconfig ]; then
+  exec /sbin/ldconfig >/dev/null
+fi
+
+if [ -x /usr/bin/update-desktop-database ]; then
+  exec update-desktop-database /usr/share/applications >/dev/null
+fi
+
+if [ -x /usr/bin/gdk-pixbuf-query-loaders ]; then
+  exec gdk-pixbuf-query-loaders --update-cache >/dev/null
+fi
+
+if [ -x /usr/bin/glib-compile-schemas ]; then
+  exec glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null
+fi
+
+if [ -x /usr/bin/pango-querymodules ]; then
+  exec pango-querymodules --update-cache >/dev/null
+fi
+
+if [ -x /usr/bin/gtk-query-immodules-2.0 ]; then
+  exec gtk-query-immodules-2.0 --update-cache >/dev/null
+fi
+
+if [ -x /usr/bin/gtk-query-immodules-3.0 ]; then
+  exec gtk-query-immodules-3.0 --update-cache >/dev/null
+fi
+
+# The script will execute the update commands every hour. If you would like
+# to adjust this interval, edit the number below to the appropriate seconds
+# you would like to have the script re-execute. The default is set at 3600
+# seconds = 1 hour or (60 sec x 60 minutes = 3600 seconds).
+
+sleep 3600

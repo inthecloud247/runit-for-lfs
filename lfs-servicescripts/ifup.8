@@ -1,0 +1,218 @@
+.TH IFUP 8 "11 September 2014" "Runit for LFS"
+.SH NAME
+.B ifup
+- bring a network interface up
+.br
+.B ifdown
+- take a network interface down
+.PP
+.SH SYNOPSIS
+.B ifup
+IFACE
+.br
+.B ifup
+-h|--help
+.br
+.B ifup
+-V|--version
+.PP
+.B ifdown
+IFACE
+.br
+.B ifdown
+-h|--help
+.br
+.B ifdown
+-V|--version
+.PP
+.SH DESCRIPTION
+The
+.B ifup
+and
+.B ifdown
+commands may be used to configure (or, respectively, deconfigure) a network interface based on interface definitions in the file /etc/sysconfig/ifconfig.IFACE.
+.PP
+.SH OPTIONS
+.TP
+.B -h, --help
+Show summary of options.
+.TP
+.B -V, --version
+Show version information.
+.PP
+.SH EXAMPLES
+.TP
+.B ifup eth0
+Bring up the interface defined in the file /etc/sysconfig/ifconfig.eth0. For example...
+.PP
+.RS
+ONBOOT=no
+.br
+IFACE=eth0
+.br
+SERVICE=ipv4-static
+.br
+IP=192.168.1.22
+.br
+GATEWAY=192.168.1.1
+.br
+PREFIX=24
+.br
+BROADCAST=192.168.1.255
+.RE
+.TP
+.B ifdown eth0:2
+Bring down the interface defined in the file /etc/sysconfig/ifconfig.eth0:2. For example...
+.PP
+.RS
+ONBOOT=no
+.br
+IFACE=eth0:2
+.br
+SERVICE=dhcpcd
+.br
+DHCP_START="--waitip"
+.br
+DHCP_STOP="-k"
+.br
+# Set PRINTIP="yes" to have the script print the DHCP IP address
+.br
+PRINTIP="yes"
+.br
+# Set PRINTALL="yes" to print the DHCP assigned values for
+.br
+# IP, SM, DG, and 1st NS. 
+.br
+PRINTALL="no"
+.RE
+.TP
+.B ifup br0
+Bring up the interface defined in the file /etc/sysconfig/ifconfig.br0. For example...
+.PP
+.RS                    
+ONBOOT=yes
+.br
+IFACE=br0
+.br
+SERVICE="bridge ipv4-static"
+.br
+IP=192.168.1.22
+.br
+GATEWAY=192.168.1.1
+.br
+PREFIX=24
+.br
+BROADCAST=192.168.1.255
+.br
+STP=no                    # Spanning tree protocol, default no
+.br
+INTERFACE_COMPONENTS=eth0 # Add to IFACE
+.br
+IP_FORWARD=true
+.br
+.RE
+.PP
+.SH NOTES
+The program does not configure network interfaces directly. It runs scripts defined by the SERVICE variable in the network configuration file. The configuration files must have the following environment variables set...
+.HP
+.B IFACE
+.br
+The interface to configure, e.g. eth0.  It must be available in /sys/class/net.
+.HP
+.B SERVICE
+.br
+The service script to run to bring up the interface. Standard services are ipv4-static and ipv4-static-route. Other services such as dhcp or bridge may be installed.  This value may be a list of services when the interface is acompound device such as a bridge.
+.HP
+.B ONBOOT
+.br
+If set to 'yes', the specified interface is configured by the netowrk boot script.
+.HP
+.B GATEWAY
+.br
+The default IP address to use for routing if the destination IP address is not in a static route or on a local network, e.g., 192.168.1.1. For secondary IP addresses on an interface, this parameter should not be specified. If the service is ipv4-static-route, this parameter must NOT be set.
+.HP
+.B STATIC_GATEWAY
+.br
+The default IP address to use for routing when setting a static routing address.  
+.HP
+.B INTERFACE_COMPONENTS
+.br
+A list of component interfaces only needed for a compound device such as a bridge. This list is normally a single value, e.g. eth0, for use with a virtual host such as kvm.
+.PP
+Parameters specific to ipv4-static...
+.HP
+.B IP 
+.br
+The IP address of the interface, e.g. 192.168.1.2.
+.HP
+.B PREFIX
+.br
+The number of bits that specify the network number of the interface. The default, if not specified, is 24.
+.HP
+.B BROADCAST
+.br
+The brodcast address for this interface, e.g 192.168.1.255.  If not specified, the broadcast address will be calculated from the IP and PREFIX.
+.PP
+Parameters specific to ipv4-static-route...
+.HP
+.B TYPE
+.br
+The type of route, typically 'default', 'network', 'or host'.
+.HP
+.B IP
+.br
+The IP address for a network or host, if the TYPE is not 'default'.
+.HP
+.B PREFIX
+.br
+The prefix for the associated IP address.
+.HP
+.B STATIC_GATEWAY
+.br
+The IP address for a network route.
+.HP
+.B SOURCE
+.br
+The source IP address to prefer when sendingto the destinations covered by the specified route. (optional)
+.PP
+Parameters specific to dhcp/dhclient...
+.HP
+.B DHCP_START
+.br
+Optional parameters to pass to the dhcp client at startup.
+.HP
+.B DHCP_STOP
+.br
+Optional paremeters to pass to the dhcp client at shutdown.
+.HP
+.B PRINTIP
+.br
+Flag to print the dhcp address to stdout.
+.HP
+.B PRINTALL
+.br
+Flag to print all obtained dhcp data to stdout
+.PP
+Parameters specific to bridge..
+.HP
+.B IP_FORWARD
+.br
+An optional flag to enable the system to forward inbound IP packets received by one interface to another outbound interface.  
+.HP
+.B STP
+.br
+Set bridge spanning tree protocol. Default is no.
+.PP
+.SH FILES
+.HP
+.B /etc/sysconfig/ifconfig.*
+.br
+Definitions of network interfaces 
+.PP
+.SH AUTHORS
+The ifup/ifdown suite was written by Nathan Coulson <nathan@linuxfromscratch.org> and Kevin P. Fleming <kpfleming@linuxfromscratch.org> and updated by Bruce Dubbs <bdubbs@linuxfromscratch>.
+.PP
+This man page was edited and reformatted for runit-for-lfs.
+.PP
+.SH SEE ALSO
+ip(8)

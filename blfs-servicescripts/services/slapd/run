@@ -1,0 +1,15 @@
+#!/bin/sh
+SLAPD_OPTIONS=""
+
+if [ -f "/etc/sysconfig/slapd" ]; then
+   . /etc/sysconfig/slapd
+fi
+
+if [ ! -d /var/run/openldap ]; then
+	install -d -o ldap -g ldap -m 755 /var/run/openldap
+fi
+if [ -z "$SLAPD_SERVICES" ]; then
+	exec /usr/sbin/slapd -u ldap -g ldap $SLAPD_OPTIONS
+else
+	exec /usr/sbin/slapd -u ldap -g ldap -h "$SLAPD_SERVICES" $SLAPD_OPTIONS
+fi

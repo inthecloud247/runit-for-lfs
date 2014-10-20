@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Note. This script is unsupported as HAL has been deprecated by
+# severely by the udev projects. While HAL can serve as a service
+# handler for Flash Player's DRM support, it's usefulness is very
+# limited unless you are using devfsd and hotplug services on a
+# non-udev enabled machine. HAL also requires a different DBus
+# build than the traditional build supported by BLFS as detailed here:
+# http://archive.linuxfromscratch.org/blfs-museum/6.2.0/BLFS-6.2.0/general/hal.html
+#
+# as well as the special source and patch tarball packages provided
+# in this directory for haldaemon and hal-info.
+
+sv check dbus >/dev/null || exit 0
+
+exec /usr/sbin/hald --use-syslog

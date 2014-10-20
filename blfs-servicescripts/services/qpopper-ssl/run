@@ -1,0 +1,3 @@
+#!/bin/sh
+exec 2>&1
+exec tcpserver -v 0 pop3s popper -f /etc/qpopper.config -l2

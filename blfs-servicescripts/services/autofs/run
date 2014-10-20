@@ -1,0 +1,4 @@
+#!/bin/sh
+[ -f /etc/sysconfig/autofs ] && . /etc/sysconfig/autofs
+[ -n "$TIMEOUT" ] && daemonoptions="--timeout=$TIMEOUT $daemonoptions"
+exec /usr/sbin/automount -f $daemonoptions >/dev/null 2>&1

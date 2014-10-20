@@ -1,0 +1,25 @@
+.TH RUNLEVEL 8 "10 September 2014" "Runit for LFS"
+.SH NAME
+.B runlevel
+- output previous and current runlevels
+.SH SYNOPSIS
+.B runlevel
+.SH DESCRIPTION
+.B runlevel
+mimics the most of the traditional functions of SysVinit's runlevel executable by reading the value of the symbolic links /etc/runit/runsvdir/current and /etc/runit/runsvdir/previous. 
+.PP
+The previous and current runlevels are output separated by a single space. If the previous runlevel cannot be determined, then the letter 'N' will be substituted. If the current runlevel cannot be determined, then
+.B runlevel
+outputs 'unknown' and exits.
+.PP
+.SH OPTIONS
+This version of
+.B runlevel
+simply reports the previous and current runlevels and does not accept command arguments.
+.PP
+.SH AUTHOR
+Arthur Radley
+.br
+<MisterArthurRadley@aol.com>
+.SH "REPORTING BUGS"
+Please send bug reports to <MisterArthurRadley@aol.com>

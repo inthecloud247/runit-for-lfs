@@ -1,0 +1,41 @@
+Thanks for downloading our project and using Runit as your init of choice
+for Linux From Scratch. A lot of hard work has gone into this project since
+its original inception on the LinuxQuestions forums as a way to import a
+new and fresh init and service management system into Linux From Scratch.
+
+We've accomplished a lot thanks to many people who donated and allowed us
+to use code and gave support.
+
+This implementation is comprised of:
+
+Release 1.0rc1 - 20140922 - Release Candidate 1
+
+- Removed several unneeded finish scripts as they only removed PID files in
+  the /run directory which is cleaned on shutdown of the system anyways.
+- Changed out the update-cache pause command for a timed rerun command using
+  sleep instead. The cache will update every hour upon boot, and can be tuned
+  by the admin for longer wait times if necessary.
+- Fixed several daemons path and flags for execution states. This should allow
+  some of the daemons not running properly to execute as intended, and stay in
+  the "up" status rather than down.
+- Completed migration of services to Runit.
+- Added legacy support for haldaemon. The haldaemon run script comes with a
+  special preloaded source tarball specifically for BLFS systems, but does
+  require a special rebuild of D-Bus to support this feature. Instructions
+  can be found in the run file header and the haldaemon-lfs.tar source package.
+- Added new simplified installation format for blfs-servicescripts for
+  Makefile. Commands are more simplified but should work without a problem.
+- Segregated lfs and blfs service files. Redrafted Makefile for the
+  blfs-servicescripts to mimic functions of blfs-bootscripts for system v.
+- Cache Update service. This service is a multi-use service that can be run
+  either as a one shot or continuously in the background. See the cache-update
+  run file for an explaination.
+- Removed sulogin service. Was found to be unneeded.
+- Temporary fix for shutdown. Not sure why sulogin is misbehaving but it is.
+  The new fix should work without it, and call the halt without using single
+  user mode.
+- Uploaded several new services.
+- Fixed ctrlaltdel handler for rebooting.
+  
+If you still have the original service files from a previous version, run
+make uninstall-true in chroot to remove them.

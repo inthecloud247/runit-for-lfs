@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/bluetooth ] ; then
+   mkdir /var/log/bluetooth
+fi
+exec /usr/bin/svlogd -tt /var/log/bluetooth

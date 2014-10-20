@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# Linux From Scratch Runit Stage 3 Bootscript.
+# Copyright 2014 James Powell, Keith Hedger, and Stoat of LinuxQuestions.
+# Work derived from VoidLinux and Ignite and adapted for LFS.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+# First re-read the configuration to see if any special parameters are needed.
+. /etc/runit.conf
+
+# This stops the services, and brings down all the services in 15 seconds. Normally
+# Runit uses a few minutes to bring down services, but unless totally necessary, the
+# system can be brought down very quickly in under 15 seconds. We'll use 10 as default.
+echo "Waiting for services to stop..."
+sv -w10 force-stop /etc/runit/runsvdir/current/*
+sv exit /etc/runit/runsvdir/current/*
+
+# This will stop and bring down the network interfaces.
+for file in  /etc/sysconfig/ifconfig.*
+do
+   net_files="${file} ${net_files}"
+done
+for file in ${net_files}
+do
+   interface=${file##*/ifconfig.}
+   # Skip if $file is * (because nothing was found)
+   if [ "${interface}" = "*" ]
+   then
+            continue
+   fi
+   /sbin/ifdown ${interface}
+done
+
+# This saves the entropy file.
+echo "Saving random seed..."
+dd if=/dev/urandom of=/var/lib/random-seed count=1 bs=512 >/dev/null 2>&1
+
+# Set the hardware clock.
+echo "Setting the hardware clock..."
+if [[ ${HARDWARECLOCK} = UTC || ${HARDWARECLOCK} = utc ]] ; then
+    HWC=$(echo $HARDWARECLOCK | tr A-Z a-z)
+    hwclock  --systohc --$HWC
+else
+    # If HARDWARECLOCK is anything else, commented, or null, then use 'localtime' as the default...
+    HWC=localtime
+    hwclock --systohc --$HWC
+fi
+
+# Send the halt signal.
+halt -w # for utmp
+
+# Stop udev and bring down all devices.
+echo "Stopping udev..."
+udevadm control --exit
+
+# Stop any remaining processes and core services.
+echo "Sending TERM signal to processes..."
+pkill --inverse -s0,1 -TERM
+sleep 5
+echo "Sending KILL signal to processes..."
+pkill --inverse -s0,1 -KILL
+
+# Unmount the local file systems.
+echo "Unmounting filesystems, disabling swap..."
+umount /tmp
+swapoff -a
+umount -r -a -t nosysfs,noproc,nodevtmpfs,notmpfs
+
+# Remount the root file system in read-only.
+echo "Remounting rootfs read-only..."
+mount -o remount,ro /
+
+# Turn off the local loopback
+ip link set lo down
+
+# Shutdown the system.
+sleep 1
+sync

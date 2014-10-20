@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Linux From Scratch Runit Stage 2 Bootscript.
+# Copyright 2014 James Powell, Keith Hedger, and Stoat of LinuxQuestions.
+# Work derived from VoidLinux and Ignite and adapted for LFS.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+# Setup first tty as unicode again, stage1 does not work correctly for tty1.
+unicode_start
+
+# Try and detect if the current runlevel directory has been created yet. It
+# should exist as a symlink to the current selected runlevel via runsvchdir.
+# If the symlinked service directories are not found, they will be created.
+if [ ! -d /etc/runit/runsvdir/current ]; then
+   pushd /etc/runit/runsvdir
+   ln -s multi current
+   popd
+fi
+
+# Let runsvchdir select the default runlevel
+runsvchdir multi >/dev/null
+
+# rc.local is used to load any extras in the system as daemons if Runit hasn't
+# covered them with run files, or run programs as daemons not normally used.
+[ -x /etc/rc.local ] && /etc/rc.local
+
+# Start all services detected in the current runlevel directory.
+exec env - PATH=$PATH \
+runsvdir /etc/runit/runsvdir/current 'log: ...........................................................................................................................................................................................................................................................................................................................................................................................................'
+

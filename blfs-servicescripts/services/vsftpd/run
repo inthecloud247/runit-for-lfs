@@ -1,0 +1,5 @@
+#!/bin/sh
+exec 2>&1
+exec tcpserver -c30 -Xv -llocalhost \
+  -x/etc/tcp.ftp.cbd -uvsftpd -gvsftpd 0 ftp \
+    softlimit -d300000 /var/vsftpd/bin/vsftpd

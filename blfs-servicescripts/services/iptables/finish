@@ -1,0 +1,6 @@
+#!/bin/bash
+
+iptables -F
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP

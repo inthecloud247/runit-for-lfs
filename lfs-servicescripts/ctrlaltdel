@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Linux From Scratch Runit Ctrl+Alt+Del handling script.
+# Copyright 2014 James Powell, Keith Hedger, and Stoat of LinuxQuestions.
+# Work derived from VoidLinux and Ignite and adapted for LFS.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+MSG="System is going down for reboot in 10 seconds..."
+touch /etc/runit/{reboot,stopit}
+chmod 100 /etc/runit/{reboot,stopit}
+echo "$MSG" | wall
+/bin/sleep 10
+
+exit 0

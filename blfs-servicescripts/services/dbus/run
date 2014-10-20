@@ -1,0 +1,9 @@
+#!/bin/sh
+exec 2>&1
+if [ ! -d /var/run/dbus ]; then
+  mkdir -p /var/run/dbus
+  chown messagebus /var/run/dbus
+  chgrp messagebus /var/run/dbus
+fi
+/usr/bin/dbus-uuidgen --ensure
+exec dbus-daemon --nofork --nopidfile --config-file=/etc/dbus-1/system.conf

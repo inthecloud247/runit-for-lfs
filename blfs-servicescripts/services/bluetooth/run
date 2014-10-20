@@ -1,0 +1,27 @@
+#!/bin/sh
+exec 2>&1
+HIDD_ENABLE="false"
+PAND_ENABLE="false"
+DUND_ENABLE="false"
+RFCOMM_ENABLE="false"
+HIDD_OPTIONS=""
+PAND_OPTIONS=""
+DUND_OPTIONS=""
+
+if [ -f "/etc/sysconfig/bluetooth" ]; then
+  . /etc/sysconfig/bluetooth
+fi
+if [ "$HIDD_ENABLE" = "true" ]; then
+  /usr/sbin/hidd "$HIDD_OPTIONS" 2>&1
+fi
+if [ "$RFCOMM_ENABLE" = "true" ]; then
+  /usr/bin/rfcomm -f /etc/bluetooth/rfcomm.conf bind all || true
+fi
+if [ "$PAND_ENABLE" = "true" ]; then
+  /usr/bin/pand "$PAND_OPTIONS" 2>&1
+fi
+if [ "$DUND_ENABLE" = "true" ]; then
+  /usr/bin/dund "$DUND_OPTIONS" 2>&1
+fi
+
+exec /usr/sbin/bluetoothd -n -d 2>&1

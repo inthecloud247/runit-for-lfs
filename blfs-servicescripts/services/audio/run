@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+if [ -x /usr/sbin/soundon ]; then
+    /usr/sbin/soundon &>/dev/null
+elif [ -x /usr/sbin/alsactl ]; then
+    /usr/sbin/alsactl restore
+fi
+exec chpst -b audio pause

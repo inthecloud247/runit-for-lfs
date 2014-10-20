@@ -1,0 +1,21 @@
+#!/bin/sh
+NETMOUNTS=`/bin/mount \
+         | /bin/grep '_netdev\|smbfs\|ncpfs\|coda\|nfs\|cifs' \
+         | /usr/bin/cut -d " " -f 3 | /bin/sed ':a;$!N;s/\n/ /;ta'`
+if [ x"$NETMOUNTS" != x ]; then
+  /bin/fuser -SIGTERM -km $NETMOUNTS > /dev/null
+    if [ $? = 0 ]; then
+      /bin/sleep ${KILLDELAY:-3}  # Default is 3, not minus 3
+      /bin/fuser -km $NETMOUNTS > /dev/null
+    fi
+    /bin/umount -af -O _netdev
+    NERRVAL=$?
+    /bin/umount -af -t coda,ncpfs,nfs,smbfs,nfsd,cifs
+    if [ $? = 0  -a  $NERRVAL = 0 ]; then
+      (exit 0)
+      else
+      (exit 1)
+    fi
+else
+  exit=1
+fi

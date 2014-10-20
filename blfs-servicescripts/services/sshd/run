@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# sshd will crash if you use the BLFS example to create
+# the keys. Let the Runit run file create them for you.
+
+exec 2>&1
+exec /usr/bin/ssh-keygen -A
+exec /usr/sbin/sshd -D -e
+pid=`cat /run/sshd.pid 2>/dev/null`
+echo "-16" >/proc/${pid}/oom_score_adj >/dev/null

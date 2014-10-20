@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d /var/log/acpid ] ; then
+   mkdir /var/log/acpid
+fi
+exec /usr/bin/svlogd -tt /var/log/acpid

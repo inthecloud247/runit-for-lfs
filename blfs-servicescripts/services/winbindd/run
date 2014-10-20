@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sv check smbd nmbd >/dev/null || exit 0
+
+exec /usr/sbin/winbindd

@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -d /var/log/qpopper ]; then
+  mkdir -p /var/log/qpopper
+fi
+exec /usr/bin/svlogd -tt /var/log/qpopper/*/

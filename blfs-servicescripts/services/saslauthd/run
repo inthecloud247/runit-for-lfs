@@ -1,0 +1,23 @@
+#!/bin/sh
+
+START="no"
+AUTHMECH=""
+OPTIONS=""
+
+if [ -f "/etc/sysconfig/saslauthd" ]; then
+   . /etc/sysconfig/saslauthd
+fi
+
+if [ "$START" != "yes" ]; then
+	exit 0
+fi
+
+if [ -z "$AUTHMECH" ]; then
+	exit 0
+fi
+
+if [ ! -d /var/run/saslauthd ]; then
+	install -d -o root -g root -m 711 /var/run/saslauthd
+fi
+
+exec /usr/sbin/saslauthd -a $AUTHMECH $OPTIONS

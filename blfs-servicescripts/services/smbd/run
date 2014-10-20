@@ -1,0 +1,4 @@
+#!/bin/sh
+PATH="/usr/samba/bin"
+exec 2>&1
+exec smbd -F -S -d3

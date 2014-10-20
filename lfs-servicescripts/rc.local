@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# This is the rc.local file to run programs, scripts, and commands
+# at boot time that are not provided by runit-for-lfs. This is a
+# bash script, so every line must be properly formatted for bash or
+# errors will occur. Example method for starting a daemon...
+#
+# Load Timidity++ as Daemon
+# if [ -x /usr/bin/timidity ]; then
+#     echo "Starting TiMidity++"
+#     /usr/bin/timidity -iAD -Os -B2,8
+# fi
+#
+# This file is for the user's convenience, troubleshooting, and
+# testing. It is not the best way to start service daemons. See
+# the rc.local man page for more things to know about using this
+# file.

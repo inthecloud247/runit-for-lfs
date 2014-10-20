@@ -1,0 +1,6 @@
+#!/bin/sh
+mkdir -p /run/mysqld
+chown mysql:mysql /run/mysqld
+mkdir -vp /var/log
+exec 2>&1
+exec /usr/bin/mysqld_safe --user=mysql >/var/log/mysql.log

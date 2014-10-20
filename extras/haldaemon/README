@@ -1,0 +1,43 @@
+This package is to install haldaemon service for legacy support.
+
+Included with this package are the following:
+
+ - Tarball containing hald sources, patches, and build instructions.
+ - Tarball containing hal-info rule sets sources and patches, and build instructions.
+ - Runit haldaemon service file.
+ 
+This package does not come with an installer so you will have to copy the directory to the
+/etc/sv folder create the symlink for /etc/runit/runsvdir/multi and chmod +x the run file
+included to activate the service.
+
+The haldaemon does require a special build of D-Bus that is no longer supported officially
+by the LFS project.
+
+You will need to resolve the following dependencies for both D-Bus and HAL.:
+
+- glib
+- pyrex (requires python-2.x)
+- gtksharp (requires mono)
+- mono
+- pciutils (requires a current pci.ids file)
+- usbutils (requires a current usb.ids file)
+- docbook-utils
+- libusb (optional)
+- doxygen (optional)
+
+To build the hal-device-manager utility you will need to resolve these dependencies:
+
+- GNOME-Python
+- PyGTK (required)
+- PyCairo (optional for PyGTK)
+- libsvg-cairo (optional for PyCairo)
+- libsvg (required for libsvg-cairo)
+- PyGTK (optional dependeny for PyCairo and a circular)
+- Numerical Python (optional for PyGTK-required)
+- libglade (required for PyGTK-required)
+- libgnomeui (optional for GNOME-Python)
+- libgnome (optional for GNOME-Python)
+- PyORBit (optional for GNOME-Python)
+- ORBit2 (required for PyORBit)
+
+Build instructiosn are included with each tarballed package.

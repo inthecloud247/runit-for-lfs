@@ -1,0 +1,5 @@
+#!/bin/sh
+MEM="`head -1 ./env/MEM`"
+CHROOT="`head -1 ./env/CHROOT`"
+exec softlimit -m "${MEM}" \
+  named -u bind -t "${CHROOT}" -g 2>&1
